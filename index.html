@@ -11,13 +11,14 @@
 
 <link rel="stylesheet" href="style.css">
 
-<!-- Chart.js -->
+<!-- ✅ Chart.js CDN (แก้ error Chart undefined) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
 <body>
 
+<!-- ================= LOGIN ================= -->
 <div id="loginPage">
 
 <h2>Restaurant Manager</h2>
@@ -30,6 +31,7 @@
 </div>
 
 
+<!-- ================= APP ================= -->
 <div id="app" style="display:none;">
 
 <div id="sidebar">
@@ -43,6 +45,9 @@
 <button id="menu_analytics" onclick="showPage('analytics')">Analytics</button>
 <button id="menu_kpi" onclick="showPage('kpi')">KPI</button>
 
+<!-- ✅ เพิ่มเมนูใหม่ -->
+<button id="menu_attendance" onclick="showPage('attendance')">Check-in</button>
+
 <hr>
 
 <button onclick="logout()">Logout</button>
@@ -52,6 +57,7 @@
 
 <div id="main">
 
+<!-- ================= TOPBAR ================= -->
 <div id="topbar">
 
 <button onclick="changeDate(-1)">◀</button>
@@ -64,7 +70,7 @@
 
 </div>
 
-
+<!-- ================= PAGES ================= -->
 <div id="page_dashboard"></div>
 <div id="page_pos" class="hidden"></div>
 <div id="page_expense" class="hidden"></div>
@@ -72,21 +78,31 @@
 <div id="page_analytics" class="hidden"></div>
 <div id="page_kpi" class="hidden"></div>
 
-</div>
+<!-- ✅ หน้าใหม่ -->
+<div id="page_attendance" class="hidden"></div>
 
 </div>
 
+</div>
+
+
+<!-- ================= SCRIPTS ================= -->
 
 <script src="auth.js"></script>
 <script src="database.js"></script>
 <script src="utils.js"></script>
 <script src="calendar.js"></script>
+
 <script src="dashboard.js"></script>
 <script src="pos.js"></script>
 <script src="expense.js"></script>
 <script src="stock.js"></script>
 <script src="analytics.js"></script>
 <script src="kpi.js"></script>
+
+<!-- ✅ เพิ่มระบบใหม่ -->
+<script src="attendance.js"></script>
+
 <script src="app.js"></script>
 
 </body>

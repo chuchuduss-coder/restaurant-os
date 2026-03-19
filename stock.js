@@ -37,41 +37,19 @@ function migrateStockData(){
 
 let data = getData("stock") || []
 
-let changed = false
+data = data.map(item => ({
 
-data = data.map(item => {
+name: item.name || item.item || "ไม่ระบุ",
+category: item.category || "วัตถุดิบหลัก",
+qty: Number(item.qty ?? item.quantity ?? 0),
+min: Number(item.min ?? item.minimum ?? 0),
+unit: item.unit || "-",
+update: item.update || getToday(),
+edit: item.edit || false
 
-let newItem = {...item}
+}))
 
-if(!newItem.name && newItem.item){
-newItem.name = newItem.item
-changed = true
-}
-
-if(newItem.qty === undefined && newItem.quantity !== undefined){
-newItem.qty = newItem.quantity
-changed = true
-}
-
-if(newItem.min === undefined && newItem.minimum !== undefined){
-newItem.min = newItem.minimum
-changed = true
-}
-
-if(newItem.qty === undefined) newItem.qty = 0
-if(newItem.min === undefined) newItem.min = 0
-if(!newItem.unit) newItem.unit = "-"
-if(!newItem.category) newItem.category = "วัตถุดิบหลัก"
-if(!newItem.update) newItem.update = "-"
-if(newItem.edit === undefined) newItem.edit = false
-
-return newItem
-
-})
-
-if(changed){
 saveData("stock", data)
-}
 
 }
 
@@ -139,7 +117,7 @@ return
 // ===== SUMMARY =====
 if(stockTab==="summary"){
 
-let low = data.filter(i=>(i.qty??0) <= (i.min??0))
+let low = data.filter(i=>(i.qty ?? 0) <= (i.min ?? 0))
 
 if(low.length===0){
 content.innerHTML=`<h3 style="color:green;">✅ Stock ดีมาก! ไม่มีของใกล้หมด</h3>`
@@ -151,7 +129,9 @@ return
 }
 
 // ===== CATEGORY =====
-let filtered = data.filter(i=>i.category===stockTab)
+let filtered = data
+.map((item,index)=>({...item,_index:index}))
+.filter(i=>i.category===stockTab)
 
 content.innerHTML = buildTable(filtered,true)
 
@@ -173,9 +153,9 @@ let html=`
 
 list.forEach((i)=>{
 
-let realIndex = getRealIndex(i)
+let realIndex = i._index ?? getRealIndex(i)
 
-let name = i.name || "-"
+let name = (i.name && i.name.trim() !== "") ? i.name : "ไม่ระบุ"
 let qty = i.qty ?? 0
 let min = i.min ?? 0
 let unit = i.unit || "-"
@@ -286,19 +266,26 @@ function addStock(){
 
 let data=getData("stock")||[]
 
+let itemName = document.getElementById("name").value.trim()
+
+if(!itemName){
+alert("กรุณากรอกชื่อรายการ")
+return
+}
+
 data.push({
-category:cat.value,
-name:name.value,
-qty:Number(qty.innerText)||0,
-min:Number(min.innerText)||0,
-unit:unit.value,
+category: document.getElementById("cat").value,
+name: itemName,
+qty:Number(document.getElementById("qty").innerText)||0,
+min:Number(document.getElementById("min").innerText)||0,
+unit:document.getElementById("unit").value || "-",
 update:getToday(),
 edit:false
 })
 
 saveData("stock",data)
 
-stockTab = cat.value
+stockTab = document.getElementById("cat").value
 drawStockPage()
 
 }
@@ -351,7 +338,7 @@ return d.getDate()+"/"+(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(-2)
 function getRealIndex(item){
 let data=getData("stock")||[]
 return data.findIndex(i=>
-(i.name||i.item) === (item.name||item.item) &&
+i.name === item.name &&
 i.category === item.category
 )
 }
