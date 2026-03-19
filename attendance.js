@@ -6,10 +6,11 @@ let attendanceTab = "checkin"
 function drawAttendancePage(){
 
 let container = document.getElementById("page_attendance")
-
 if(!container) return
 
-content.innerHTML = `
+container.innerHTML = `
+
+<h2>Check-in System</h2>
 
 <div style="display:flex;gap:10px;margin-bottom:15px;">
 <button class="tabBtn ${attendanceTab==='checkin'?'active':''}" 
@@ -29,7 +30,7 @@ renderAttendance()
 // ================= SWITCH TAB =================
 function switchAttendanceTab(tab){
 attendanceTab = tab
-drawAttendancePage() // 🔥 ต้อง redraw ทั้งหน้า
+drawAttendancePage()
 }
 
 // ================= RENDER =================
@@ -38,7 +39,7 @@ function renderAttendance(){
 let content = document.getElementById("attendanceContent")
 if(!content) return
 
-// ===== CHECK-IN PAGE =====
+// ===== CHECK-IN =====
 if(attendanceTab === "checkin"){
 
 content.innerHTML = `
@@ -56,18 +57,17 @@ content.innerHTML = `
 <button onclick="capture('checkout')">Check-out</button>
 
 <div id="timeline"></div>
-
 `
 
 setTimeout(()=>{
 startCamera()
 loadStaff()
 renderTimeline()
-},300)
+},400)
 
 }
 
-// ===== STAFF PAGE =====
+// ===== STAFF =====
 if(attendanceTab === "staff"){
 
 content.innerHTML = `
@@ -80,7 +80,6 @@ content.innerHTML = `
 <hr>
 
 <div id="staffList"></div>
-
 `
 
 renderStaffList()
@@ -101,21 +100,15 @@ const stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
 video.srcObject = stream
 video.setAttribute("playsinline", true)
-
-// 🔥 สำคัญ (iPad fix)
 video.muted = true
 
 await video.play()
 
 cameraStarted = true
 
-console.log("CAMERA READY")
-
 }catch(e){
-
 console.log(e)
-alert("ไม่สามารถเปิดกล้องได้")
-
+showToast("❌ เปิดกล้องไม่ได้")
 }
 
 }
@@ -123,26 +116,24 @@ alert("ไม่สามารถเปิดกล้องได้")
 // ================= CAPTURE =================
 function capture(type){
 
-console.log("CLICK:", type)
-
 let name = document.getElementById("staffSelect")?.value
 let video = document.getElementById("video")
 let canvas = document.getElementById("canvas")
 
 if(!name){
-alert("เลือกพนักงานก่อน")
+showToast("เลือกพนักงานก่อน")
 return
 }
 
 if(!video || video.videoWidth === 0){
-alert("กล้องยังไม่พร้อม (รอ 1-2 วินาที)")
+showToast("กล้องยังไม่พร้อม")
 return
 }
 
 let ctx = canvas.getContext("2d")
 
-let w = 240
-let h = video.videoHeight * (240 / video.videoWidth)
+let w = 200
+let h = video.videoHeight * (200 / video.videoWidth)
 
 canvas.width = w
 canvas.height = h
@@ -158,14 +149,9 @@ ctx.fillText(now.toLocaleString(),5,15)
 // 🔥 บีบภาพ
 let image = canvas.toDataURL("image/jpeg",0.3)
 
-// ❌ กัน storage เต็ม
-if(image.length > 200000){
-alert("รูปใหญ่เกิน")
-return
-}
-
 saveAttendance(name,type,image,now)
 
+// 🔄 restart camera (แก้ค้าง)
 setTimeout(()=>{
 restartCamera()
 },200)
@@ -204,10 +190,11 @@ localStorage.setItem("attendance", JSON.stringify(data))
 
 renderTimeline()
 
+showToast("บันทึกสำเร็จ ✅")
 
 }
 
-
+// ================= TOAST =================
 function showToast(msg){
 
 let toast = document.createElement("div")
@@ -226,9 +213,7 @@ toast.style.zIndex = "9999"
 
 document.body.appendChild(toast)
 
-setTimeout(()=>{
-toast.remove()
-},1500)
+setTimeout(()=>toast.remove(),1500)
 
 }
 
@@ -256,13 +241,13 @@ html += `
 ${d.checkin ? `
 <div>
 <p>Check-in: ${d.checkin.time}</p>
-<img src="${d.checkin.image}" width="80">
+<img src="${d.checkin.image}" width="70">
 </div>` : ""}
 
 ${d.checkout ? `
 <div>
 <p>Check-out: ${d.checkout.time}</p>
-<img src="${d.checkout.image}" width="80">
+<img src="${d.checkout.image}" width="70">
 </div>` : ""}
 
 </div>
@@ -280,7 +265,6 @@ el.innerHTML = html
 function addStaff(){
 
 let name = document.getElementById("staffName").value
-
 if(!name) return
 
 let data = JSON.parse(localStorage.getItem("staff") || "[]")
@@ -312,7 +296,7 @@ ${s.name}
 
 }
 
-// ================= DELETE STAFF =================
+// ================= DELETE =================
 function deleteStaff(i){
 
 let data = JSON.parse(localStorage.getItem("staff") || "[]")
@@ -339,6 +323,7 @@ select.innerHTML = data.map(s=>`
 
 }
 
+// ================= RESTART CAMERA =================
 function restartCamera(){
 
 let video = document.getElementById("video")
