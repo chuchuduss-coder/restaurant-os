@@ -9,24 +9,17 @@ let container = document.getElementById("page_attendance")
 
 if(!container) return
 
-container.innerHTML = `
-
-<h2>Check-in System</h2>
+content.innerHTML = `
 
 <div style="display:flex;gap:10px;margin-bottom:15px;">
-<button onclick="switchAttendanceTab('checkin')"
-style="background:${attendanceTab==='checkin'?'#333':'#eee'};color:${attendanceTab==='checkin'?'#fff':'#000'}">
-Check-in
-</button>
+<button class="tabBtn ${attendanceTab==='checkin'?'active':''}" 
+onclick="switchAttendanceTab('checkin')">Check-in</button>
 
-<button onclick="switchAttendanceTab('staff')"
-style="background:${attendanceTab==='staff'?'#333':'#eee'};color:${attendanceTab==='staff'?'#fff':'#000'}">
-พนักงาน
-</button>
+<button class="tabBtn ${attendanceTab==='staff'?'active':''}" 
+onclick="switchAttendanceTab('staff')">พนักงาน</button>
 </div>
 
 <div id="attendanceContent"></div>
-
 `
 
 renderAttendance()
@@ -36,7 +29,7 @@ renderAttendance()
 // ================= SWITCH TAB =================
 function switchAttendanceTab(tab){
 attendanceTab = tab
-renderAttendance()
+drawAttendancePage() // 🔥 ต้อง redraw ทั้งหน้า
 }
 
 // ================= RENDER =================
@@ -173,6 +166,10 @@ return
 
 saveAttendance(name,type,image,now)
 
+setTimeout(()=>{
+restartCamera()
+},200)
+
 }
 
 // ================= SAVE =================
@@ -207,7 +204,31 @@ localStorage.setItem("attendance", JSON.stringify(data))
 
 renderTimeline()
 
-alert("บันทึกสำเร็จ ✅")
+
+}
+
+
+function showToast(msg){
+
+let toast = document.createElement("div")
+
+toast.innerText = msg
+
+toast.style.position = "fixed"
+toast.style.bottom = "20px"
+toast.style.left = "50%"
+toast.style.transform = "translateX(-50%)"
+toast.style.background = "#333"
+toast.style.color = "#fff"
+toast.style.padding = "10px 20px"
+toast.style.borderRadius = "10px"
+toast.style.zIndex = "9999"
+
+document.body.appendChild(toast)
+
+setTimeout(()=>{
+toast.remove()
+},1500)
 
 }
 
@@ -321,22 +342,17 @@ select.innerHTML = data.map(s=>`
 function restartCamera(){
 
 let video = document.getElementById("video")
-
 if(!video) return
 
-// ปิดของเดิมก่อน
 if(video.srcObject){
-let tracks = video.srcObject.getTracks()
-tracks.forEach(track => track.stop())
+video.srcObject.getTracks().forEach(t=>t.stop())
 video.srcObject = null
 }
 
-// reset flag
 cameraStarted = false
 
-// เปิดใหม่
 setTimeout(()=>{
 startCamera()
-},300)
+},200)
 
 }

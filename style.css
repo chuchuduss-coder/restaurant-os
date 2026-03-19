@@ -130,3 +130,16 @@ padding:12px;
 width:250px;
 
 }
+
+.tabBtn{
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    background:#eee;
+    color:#000;
+}
+
+.tabBtn.active{
+    background:#333;
+    color:#fff;
+}
