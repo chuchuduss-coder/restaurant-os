@@ -215,12 +215,20 @@ async function startCamera(){
     try{
         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
         video.srcObject = stream
+
+        // ✅ สำคัญสำหรับ iPad
+        video.setAttribute("playsinline", true)
+        video.play()
+
         cameraStarted = true
+
     }catch(e){
-        console.log("Camera error:", e)
+        alert("ไม่สามารถเปิดกล้องได้")
+        console.log(e)
     }
 
 }
+
 // ================= LOAD STAFF =================
 function loadStaff(){
 
@@ -238,12 +246,7 @@ function loadStaff(){
 // ================= CAPTURE =================
 function capture(type){
 
-let name = document.getElementById("staffSelect").value
-
-if(!video.videoWidth){
-    alert("กล้องยังไม่พร้อม")
-    return
-}
+let name = document.getElementById("staffSelect")?.value
 
 if(!name){
 alert("เลือกพนักงานก่อน")
@@ -252,27 +255,47 @@ return
 
 let video = document.getElementById("video")
 let canvas = document.getElementById("canvas")
+
+// ❗ กัน iPad กล้องยังไม่พร้อม
+if(!video || video.videoWidth === 0){
+alert("กล้องยังไม่พร้อม กรุณารอสักครู่")
+return
+}
+
 let ctx = canvas.getContext("2d")
 
-canvas.width = video.videoWidth
-canvas.height = video.videoHeight
+// 🔥 ลดขนาดภาพ (เล็กมาก)
+let width = 240
+let height = video.videoHeight * (240 / video.videoWidth)
 
-ctx.drawImage(video,0,0)
+canvas.width = width
+canvas.height = height
 
-// timestamp
+ctx.drawImage(video,0,0,width,height)
+
+// 🔥 timestamp
 let now = new Date()
 let text = now.toLocaleString()
 
 ctx.fillStyle = "red"
-ctx.font = "20px Arial"
-ctx.fillText(text,10,30)
+ctx.font = "12px Arial"
+ctx.fillText(text,5,15)
 
-let image = canvas.toDataURL("image/png")
+// 🔥 บีบภาพ (สำคัญมาก)
+let image = canvas.toDataURL("image/jpeg",0.3)
+
+// debug
+console.log("Image size:", image.length)
+
+// ❗ กัน storage เต็ม
+if(image.length > 200000){
+alert("รูปใหญ่เกิน ลดคุณภาพ")
+return
+}
 
 saveAttendance(name,type,image,now)
 
 }
-
 // ================= SAVE =================
 function saveAttendance(name,type,image,now){
 
@@ -301,12 +324,20 @@ image:image
 }
 }
 
+// 🔥 ป้องกัน save fail
+try{
 saveData("attendance",data)
+}catch(e){
+alert("บันทึกไม่สำเร็จ (storage เต็ม)")
+console.log(e)
+return
+}
 
 renderTimeline()
 
-}
+alert("บันทึกสำเร็จ ✅")
 
+}
 // ================= TIMELINE =================
 function renderTimeline(){
 
