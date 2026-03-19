@@ -99,8 +99,6 @@ renderStaffList()
 // ================= CAMERA =================
 async function startCamera(){
 
-if(cameraStarted) return
-
 let video = document.getElementById("video")
 if(!video) return
 
@@ -110,6 +108,10 @@ const stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
 video.srcObject = stream
 video.setAttribute("playsinline", true)
+
+// 🔥 สำคัญ (iPad fix)
+video.muted = true
+
 await video.play()
 
 cameraStarted = true
@@ -118,8 +120,8 @@ console.log("CAMERA READY")
 
 }catch(e){
 
-alert("❌ ไม่สามารถเปิดกล้องได้")
 console.log(e)
+alert("ไม่สามารถเปิดกล้องได้")
 
 }
 
@@ -313,5 +315,28 @@ let data = JSON.parse(localStorage.getItem("staff") || "[]")
 select.innerHTML = data.map(s=>`
 <option value="${s.name}">${s.name}</option>
 `).join("")
+
+}
+
+function restartCamera(){
+
+let video = document.getElementById("video")
+
+if(!video) return
+
+// ปิดของเดิมก่อน
+if(video.srcObject){
+let tracks = video.srcObject.getTracks()
+tracks.forEach(track => track.stop())
+video.srcObject = null
+}
+
+// reset flag
+cameraStarted = false
+
+// เปิดใหม่
+setTimeout(()=>{
+startCamera()
+},300)
 
 }
