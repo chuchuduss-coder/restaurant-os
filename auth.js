@@ -1,5 +1,5 @@
 let users=[
-{username:"admin",password:"1234",role:"admin"},
+{username:"admin",password:"9999",role:"admin"},
 {username:"staff",password:"1234",role:"staff"}
 ]
 

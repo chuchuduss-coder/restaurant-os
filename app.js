@@ -61,6 +61,8 @@ function showPage(page){
     if(page==="attendance" && typeof drawAttendancePage==="function"){
         drawAttendancePage()
     }
+	
+
 
 }
 

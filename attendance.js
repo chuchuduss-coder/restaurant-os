@@ -1,29 +1,26 @@
+// ================= STATE =================
 let cameraStarted = false
-// ================= CONFIG =================
 let attendanceTab = "checkin"
 
-// ================= DRAW =================
+// ================= DRAW PAGE =================
 function drawAttendancePage(){
 
-let el = document.getElementById("page_attendance")
+let container = document.getElementById("page_attendance")
 
-el.innerHTML = `
+if(!container) return
+
+container.innerHTML = `
 
 <h2>Check-in System</h2>
 
-<!-- ===== TABS ===== -->
 <div style="display:flex;gap:10px;margin-bottom:15px;">
-<button onclick="switchTab('checkin')"
-style="background:${attendanceTab==='checkin'?'#333':'#eee'};
-color:${attendanceTab==='checkin'?'#fff':'#000'};
-padding:8px 12px;border:none;border-radius:8px;">
+<button onclick="switchAttendanceTab('checkin')"
+style="background:${attendanceTab==='checkin'?'#333':'#eee'};color:${attendanceTab==='checkin'?'#fff':'#000'}">
 Check-in
 </button>
 
-<button onclick="switchTab('staff')"
-style="background:${attendanceTab==='staff'?'#333':'#eee'};
-color:${attendanceTab==='staff'?'#fff':'#000'};
-padding:8px 12px;border:none;border-radius:8px;">
+<button onclick="switchAttendanceTab('staff')"
+style="background:${attendanceTab==='staff'?'#333':'#eee'};color:${attendanceTab==='staff'?'#fff':'#000'}">
 พนักงาน
 </button>
 </div>
@@ -37,63 +34,57 @@ renderAttendance()
 }
 
 // ================= SWITCH TAB =================
-function switchTab(tab){
+function switchAttendanceTab(tab){
 attendanceTab = tab
-drawAttendancePage()
+renderAttendance()
 }
 
 // ================= RENDER =================
 function renderAttendance(){
 
-if(attendanceTab==="checkin"){
-renderCheckin()
-}else{
-renderStaff()
-}
+let content = document.getElementById("attendanceContent")
+if(!content) return
 
-}
+// ===== CHECK-IN PAGE =====
+if(attendanceTab === "checkin"){
 
-// ================= CHECK-IN =================
-function renderCheckin(){
-
-let el = document.getElementById("attendanceContent")
-
-el.innerHTML = `
+content.innerHTML = `
 
 <select id="staffSelect"></select>
 
-<video id="video" width="300" autoplay></video>
+<br><br>
+
+<video id="video" width="220" autoplay playsinline style="border-radius:10px;"></video>
 <canvas id="canvas" style="display:none;"></canvas>
 
-<div style="margin-top:10px;">
-<button onclick="capture('checkin')">📸 Check-in</button>
-<button onclick="capture('checkout')">📸 Check-out</button>
-</div>
+<br><br>
+
+<button onclick="capture('checkin')">Check-in</button>
+<button onclick="capture('checkout')">Check-out</button>
 
 <div id="timeline"></div>
 
 `
 
-loadStaff()
+setTimeout(()=>{
 startCamera()
+loadStaff()
 renderTimeline()
+},300)
 
 }
 
-// ================= STAFF =================
-function renderStaff(){
+// ===== STAFF PAGE =====
+if(attendanceTab === "staff"){
 
-let el = document.getElementById("attendanceContent")
+content.innerHTML = `
 
-let staff = getData("staff") || []
+<h3>เพิ่มพนักงาน</h3>
 
-el.innerHTML = `
-
-<div style="margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap;">
 <input id="staffName" placeholder="ชื่อพนักงาน">
-<input id="staffPos" placeholder="ตำแหน่ง">
 <button onclick="addStaff()">เพิ่ม</button>
-</div>
+
+<hr>
 
 <div id="staffList"></div>
 
@@ -103,203 +94,89 @@ renderStaffList()
 
 }
 
-// ================= ADD STAFF =================
-function addStaff(){
-
-let name = document.getElementById("staffName").value
-let pos = document.getElementById("staffPos").value
-
-if(!name){
-alert("กรอกชื่อ")
-return
-}
-
-let data = getData("staff") || []
-
-data.push({
-name:name,
-position:pos,
-edit:false
-})
-
-saveData("staff",data)
-
-drawAttendancePage()
-
-}
-
-// ================= STAFF LIST =================
-function renderStaffList(){
-
-let staff = getData("staff") || []
-
-let el = document.getElementById("staffList")
-
-let html = ""
-
-staff.forEach((s,i)=>{
-
-if(!s.edit){
-
-html += `
-<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-<div>${s.name} | ${s.position||"-"}</div>
-<div>
-<button onclick="editStaff(${i},true)">✏️</button>
-</div>
-</div>
-`
-
-}else{
-
-html += `
-<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;">
-<input id="n${i}" value="${s.name}">
-<input id="p${i}" value="${s.position||''}">
-<button onclick="saveStaff(${i})">💾</button>
-<button onclick="deleteStaff(${i})">🗑</button>
-</div>
-`
-
-}
-
-})
-
-el.innerHTML = html
-
-}
-
-// ================= STAFF ACTION =================
-function editStaff(i,state){
-
-let data = getData("staff")
-data[i].edit = state
-saveData("staff",data)
-renderStaffList()
-
-}
-
-function saveStaff(i){
-
-let data = getData("staff")
-
-data[i].name = document.getElementById("n"+i).value
-data[i].position = document.getElementById("p"+i).value
-data[i].edit = false
-
-saveData("staff",data)
-
-renderStaffList()
-
-}
-
-function deleteStaff(i){
-
-let data = getData("staff")
-data.splice(i,1)
-
-saveData("staff",data)
-
-renderStaffList()
-
 }
 
 // ================= CAMERA =================
 async function startCamera(){
 
-    if(cameraStarted) return
+if(cameraStarted) return
 
-    let video = document.getElementById("video")
-    if(!video) return
+let video = document.getElementById("video")
+if(!video) return
 
-    try{
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-        video.srcObject = stream
+try{
 
-        // ✅ สำคัญสำหรับ iPad
-        video.setAttribute("playsinline", true)
-        video.play()
+const stream = await navigator.mediaDevices.getUserMedia({ video: true })
 
-        cameraStarted = true
+video.srcObject = stream
+video.setAttribute("playsinline", true)
+await video.play()
 
-    }catch(e){
-        alert("ไม่สามารถเปิดกล้องได้")
-        console.log(e)
-    }
+cameraStarted = true
+
+console.log("CAMERA READY")
+
+}catch(e){
+
+alert("❌ ไม่สามารถเปิดกล้องได้")
+console.log(e)
 
 }
-
-// ================= LOAD STAFF =================
-function loadStaff(){
-
-    let select = document.getElementById("staffSelect")
-    if(!select) return
-
-    let staff = getData("staff") || []
-
-    select.innerHTML = staff.map(s=>`
-    <option value="${s.name}">${s.name}</option>
-    `).join("")
 
 }
 
 // ================= CAPTURE =================
 function capture(type){
 
+console.log("CLICK:", type)
+
 let name = document.getElementById("staffSelect")?.value
+let video = document.getElementById("video")
+let canvas = document.getElementById("canvas")
 
 if(!name){
 alert("เลือกพนักงานก่อน")
 return
 }
 
-let video = document.getElementById("video")
-let canvas = document.getElementById("canvas")
-
-// ❗ กัน iPad กล้องยังไม่พร้อม
 if(!video || video.videoWidth === 0){
-alert("กล้องยังไม่พร้อม กรุณารอสักครู่")
+alert("กล้องยังไม่พร้อม (รอ 1-2 วินาที)")
 return
 }
 
 let ctx = canvas.getContext("2d")
 
-// 🔥 ลดขนาดภาพ (เล็กมาก)
-let width = 240
-let height = video.videoHeight * (240 / video.videoWidth)
+let w = 240
+let h = video.videoHeight * (240 / video.videoWidth)
 
-canvas.width = width
-canvas.height = height
+canvas.width = w
+canvas.height = h
 
-ctx.drawImage(video,0,0,width,height)
+ctx.drawImage(video,0,0,w,h)
 
-// 🔥 timestamp
+// timestamp
 let now = new Date()
-let text = now.toLocaleString()
+ctx.fillStyle="red"
+ctx.font="12px Arial"
+ctx.fillText(now.toLocaleString(),5,15)
 
-ctx.fillStyle = "red"
-ctx.font = "12px Arial"
-ctx.fillText(text,5,15)
-
-// 🔥 บีบภาพ (สำคัญมาก)
+// 🔥 บีบภาพ
 let image = canvas.toDataURL("image/jpeg",0.3)
 
-// debug
-console.log("Image size:", image.length)
-
-// ❗ กัน storage เต็ม
+// ❌ กัน storage เต็ม
 if(image.length > 200000){
-alert("รูปใหญ่เกิน ลดคุณภาพ")
+alert("รูปใหญ่เกิน")
 return
 }
 
 saveAttendance(name,type,image,now)
 
 }
+
 // ================= SAVE =================
 function saveAttendance(name,type,image,now){
 
-let data = getData("attendance") || []
+let data = JSON.parse(localStorage.getItem("attendance") || "[]")
 
 let today = now.toISOString().split("T")[0]
 
@@ -312,69 +189,129 @@ data.push(record)
 
 if(type==="checkin"){
 record.checkin = {
-time:now.toLocaleTimeString(),
-image:image
+time: now.toLocaleTimeString(),
+image: image
 }
 }
 
 if(type==="checkout"){
 record.checkout = {
-time:now.toLocaleTimeString(),
-image:image
+time: now.toLocaleTimeString(),
+image: image
 }
 }
 
-// 🔥 ป้องกัน save fail
-try{
-saveData("attendance",data)
-}catch(e){
-alert("บันทึกไม่สำเร็จ (storage เต็ม)")
-console.log(e)
-return
-}
+localStorage.setItem("attendance", JSON.stringify(data))
 
 renderTimeline()
 
 alert("บันทึกสำเร็จ ✅")
 
 }
+
 // ================= TIMELINE =================
 function renderTimeline(){
 
-    let el = document.getElementById("timeline")
-    if(!el) return
+let el = document.getElementById("timeline")
+if(!el) return
 
-    let data = getData("attendance") || []
+let data = JSON.parse(localStorage.getItem("attendance") || "[]")
 
-    data.sort((a,b)=>b.date.localeCompare(a.date))
+data.sort((a,b)=>b.date.localeCompare(a.date))
 
-    let html = ""
+let html = ""
 
-    data.forEach(d=>{
+data.forEach(d=>{
 
-        html += `
-        <div style="border:1px solid #ccc;padding:10px;margin:10px 0;">
-        <h3>${d.name} | ${d.date}</h3>
+html += `
+<div style="border:1px solid #ccc;padding:10px;margin:10px 0;border-radius:10px;">
 
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+<h3>${d.name} | ${d.date}</h3>
 
-        ${d.checkin ? `
-        <div>
-        <p>Check-in: ${d.checkin.time}</p>
-        <img src="${d.checkin.image}" width="120">
-        </div>` : ""}
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
 
-        ${d.checkout ? `
-        <div>
-        <p>Check-out: ${d.checkout.time}</p>
-        <img src="${d.checkout.image}" width="120">
-        </div>` : ""}
+${d.checkin ? `
+<div>
+<p>Check-in: ${d.checkin.time}</p>
+<img src="${d.checkin.image}" width="80">
+</div>` : ""}
 
-        </div>
-        </div>
-        `
-    })
+${d.checkout ? `
+<div>
+<p>Check-out: ${d.checkout.time}</p>
+<img src="${d.checkout.image}" width="80">
+</div>` : ""}
 
-    el.innerHTML = html
+</div>
+
+</div>
+`
+
+})
+
+el.innerHTML = html
+
+}
+
+// ================= STAFF =================
+function addStaff(){
+
+let name = document.getElementById("staffName").value
+
+if(!name) return
+
+let data = JSON.parse(localStorage.getItem("staff") || "[]")
+
+data.push({name:name})
+
+localStorage.setItem("staff", JSON.stringify(data))
+
+document.getElementById("staffName").value=""
+
+renderStaffList()
+
+}
+
+// ================= STAFF LIST =================
+function renderStaffList(){
+
+let el = document.getElementById("staffList")
+if(!el) return
+
+let data = JSON.parse(localStorage.getItem("staff") || "[]")
+
+el.innerHTML = data.map((s,i)=>`
+<div style="margin:5px 0;">
+${s.name}
+<button onclick="deleteStaff(${i})">🗑</button>
+</div>
+`).join("")
+
+}
+
+// ================= DELETE STAFF =================
+function deleteStaff(i){
+
+let data = JSON.parse(localStorage.getItem("staff") || "[]")
+
+data.splice(i,1)
+
+localStorage.setItem("staff", JSON.stringify(data))
+
+renderStaffList()
+
+}
+
+// ================= LOAD STAFF =================
+function loadStaff(){
+
+let select = document.getElementById("staffSelect")
+if(!select) return
+
+let data = JSON.parse(localStorage.getItem("staff") || "[]")
+
+select.innerHTML = data.map(s=>`
+<option value="${s.name}">${s.name}</option>
+`).join("")
 
 }
